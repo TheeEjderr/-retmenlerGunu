@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efsane Öğretmenler Günü Sürprizi 🎁</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e272e, #2f3640);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: #353b48;
+            max-width: 580px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+            border: 3px solid #00d2d3;
+        }
+        .teacher-tag {
+            color: #ff9f43;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        h2 { color: #feca57; margin-bottom: 10px; font-size: 24px; }
+        p { font-size: 16px; color: #d2dae2; margin-bottom: 20px; line-height: 1.5; }
+        button {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 14px 18px;
+            font-size: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 8px 0;
+            width: 100%;
+            font-weight: bold;
+            text-align: left;
+            transition: 0.2s;
+        }
+        button:hover { background: #ff6b81; transform: scale(1.01); }
+        .action-btn { background: #1dd1a1; text-align: center; margin-top: 15px; }
+        .action-btn:hover { background: #10ac84; }
+        .reset-btn { background: #54a0ff; text-align: center; margin-top: 15px; }
+        .reset-btn:hover { background: #2e86de; }
+        .feedback { font-weight: bold; margin-top: 15px; font-size: 16px; min-height: 30px; }
+        #game2-box, #result-box, #itiraf-box { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- 1. OYUN: KİMLİK TESTİ -->
+    <div id="game1-box">
+        <h2 id="g1-title">Soru 1 / 4</h2>
+        <p id="g1-subtitle">Hangi özellik seni en iyi anlatıyor?</p>
+        <div id="g1-choices"></div>
+    </div>
+
+    <!-- 1. OYUN SONUCU VE 2. OYUNA GEÇİŞ -->
+    <div id="result-box">
+        <h2 id="result-title" style="color: #1dd1a1;"></h2>
+        <p id="result-msg" style="line-height: 1.6; font-size: 15px;"></p>
+        <button class="action-btn" onclick="ikinciOyunaBasla()">🚀 Çıkan Hocanın 5 Soruluk Testine Geç!</button>
+        <button class="reset-btn" onclick="oyunuSifirla()">🔄 Baştan Başla</button>
+    </div>
+
+    <!-- 2. OYUN: ÇIKAN HOCAYA ÖZEL 5 SORULUK TERS KÖŞE TEST -->
+    <div id="game2-box">
+        <div class="teacher-tag" id="g2-teacher-tag">Hoca Adı</div>
+        <h2 id="g2-title">Branş Testi</h2>
+        <p id="g2-subtitle"></p>
+        <div id="g2-choices"></div>
+        <div id="g2-feedback" class="feedback"></div>
+    </div>
+
+    <!-- 3. OYUN: BÜYÜK İTİRAF VE ÖVGÜ EKRANI -->
+    <div id="itiraf-box">
+        <h2 style="color: #ffd32a;">❤️ BÜYÜK ÖĞRETMENLER GÜNÜ İTİRAFI ❤️</h2>
+        <p style="font-size: 15px; text-align: left; line-height: 1.7; color: #f1f2f6;">
+            Hocam kafayı yediniz, biliyoruz! Kendi branşınıza ait bu 5 soruluk testte mantıklı ilk cevaplar yanlış sayıldı, tamamen saçma olan ikinci cevaplar doğru çıktı... Çünkü <b>bütün bu oyun baştan aşağı bir şakaydı!</b> 😄<br><br>
+            Siz bizim baş tacımızsınız. Adem Hocamızın sakinliği ve gitarı, İngilizce Hocamızın o tatlı "sana 100 veriyorum" esprileri, Mehtap Hocamızın soruları 10 saniyede çözen hızı, Nesibe Hocamızın TÜBİTAK projeleri ve Celalettin Hocamızın o efsane hikayeleri ile "Sence ne kadar doğru?" deyişiyle iyi ki hayatımızdasınız.<br><br>
+            Bize kattığınız her şey için minnettarız. <b>Öğretmenler Gününüz kutlu olsun! 💐</b>
+        </p>
+        <button class="reset-btn" onclick="oyunuSifirla()">🔄 Ana Menüye Dön</button>
+    </div>
+</div>
+
+<script>
+    // --- 1. OYUN DEĞİŞKENLERİ ---
+    let soruIndex = 0;
+    let puanlar = { adem: 0, ingilizce: 0, mehtap: 0, nesibe: 0, celalettin: 0 };
+    let kazananHoca = "";
+
+    const sorular = [
+        {
+            baslik: "Soru 1 / 4",
+            altBaslik: "1. İpucu: Hangisi senin tarzın?",
+            secenekler: [
+                { metin: "🎸 Gitar çalmayı ve müzik yapmayı severim.", hoca: "adem" },
+                { metin: "💛💙 Koyu bir Fenerbahçeliyim.", hoca: "ingilizce" },
+                { metin: "⏱️ En zor matematik sorularını hızla çözerim.", hoca: "mehtap" },
+                { metin: "🔬 TÜBİTAK'ta harika çalışmalar yaptım.", hoca: "nesibe" },
+                { metin: "📖 Dersi bırakıp en efsanevi hikayeleri anlatırım.", hoca: "celalettin" }
+            ]
+        },
+        {
+            baslik: "Soru 2 / 4",
+            altBaslik: "2. İpucu: En belirgin özelliğin nedir?",
+            secenekler: [
+                { metin: "💛❤️ Koyu Galatasaraylıyım ve sakinim.", hoca: "adem" },
+                { metin: "🤝 Adem Hoca'nın çok yakın arkadaşıyım.", hoca: "ingilizce" },
+                { metin: "📐 Sakinim ve 'Ben bunu size anlattım' derim.", hoca: "mehtap" },
+                { metin: "🎨 Sakinim ve Leonardo da Vinci gibi resim çizerim.", hoca: "nesibe" },
+                { metin: "✨ Hikayelerimi o kadar güzel anlatırım ki herkes dalıp gider.", hoca: "celalettin" }
+            ]
+        },
+        {
+            baslik: "Soru 3 / 4",
+            altBaslik: "3. İpucu: Sınıftaki efsane sözün veya hareketin?",
+            secenekler: [
+                { metin: "🧠 Efsane repliğim: 'Bu yaşta bu zeka!'", hoca: "adem" },
+                { metin: "😎 Övülünce şaka yapıp 'Sana yüz veriyorum' derim.", hoca: "ingilizce" },
+                { metin: "🔢 Sayılar ve pratik formüller benden sorulur.", hoca: "mehtap" },
+                { metin: "💡 Teknoloji, tasarım ve sanat benim işim.", hoca: "nesibe" },
+                { metin: "🤔 Cümlelerimin sonunu hep 'Sence ne kadar doğru?' diye bitiririm.", hoca: "celalettin" }
+            ]
+        },
+        {
+            baslik: "Soru 4 / 4",
+            altBaslik: "4. İpucu: Sınıfa girdiğinde modun nasıldır?",
+            secenekler: [
+                { metin: "🧬 Deney havasında, sakin ve müzik ruhlu.", hoca: "adem" },
+                { metin: "🇬🇧 Enerjik, esprili ve bol kahkahalı.", hoca: "ingilizce" },
+                { metin: "🧮 Hızlı, net ve çözüm odaklı.", hoca: "mehtap" },
+                { metin: "🖌️ Yaratıcı, estetik ve vizyoner.", hoca: "nesibe" },
+                { metin: "🧘 Dünyanın en sakin, en sabırlı insanıyım.", hoca: "celalettin" }
+            ]
+        }
+    ];
+
+    function oyunuSifirla() {
+        soruIndex = 0;
+        puanlar = { adem: 0, ingilizce: 0, mehtap: 0, nesibe: 0, celalettin: 0 };
+        kazananHoca = "";
+        document.getElementById("game1-box").style.display = "block";
+        document.getElementById("result-box").style.display = "none";
+        document.getElementById("game2-box").style.display = "none";
+        document.getElementById("itiraf-box").style.display = "none";
+        soruYukle();
+    }
+
+    function soruYukle() {
+        if (soruIndex >= sorular.length) {
+            sonucuGoster();
+            return;
+        }
+
+        const mevcut = sorular[soruIndex];
+        document.getElementById("g1-title").innerText = mevcut.baslik;
+        document.getElementById("g1-subtitle").innerText = mevcut.altBaslik;
+        
+        const choicesDiv = document.getElementById("g1-choices");
+        choicesDiv.innerHTML = "";
+
+        const karisik = [...mevcut.secenekler].sort(() => Math.random() - 0.5);
+
+        karisik.forEach(secenek => {
+            const btn = document.createElement("button");
+            btn.innerText = secenek.metin;
+            btn.onclick = function() {
+                puanlar[secenek.hoca]++;
+                soruIndex++;
+                soruYukle();
+            };
+            choicesDiv.appendChild(btn);
+        });
+    }
+
+    function sonucuGoster() {
+        document.getElementById("game1-box").style.display = "none";
+        document.getElementById("result-box").style.display = "block";
+
+        let maxPuan = Math.max(...Object.values(puanlar));
+        let kazananlar = Object.keys(puanlar).filter(h => puanlar[h] === maxPuan);
+
+        const baslik = document.getElementById("result-title");
+        const mesaj = document.getElementById("result-msg");
+
+        if (kazananlar.length > 1) {
+            baslik.innerText = "🤔 Seni Tam Tanıyamadım Hocam!";
+            mesaj.innerHTML = "Cevaplar o kadar karışık ki herkesten biraz almışsın! Tekrar deneyip net bir hoca seçmeye ne dersin? 😄";
+            return;
+        }
+
+        kazananHoca = kazananlar[0];
+        let yuzde = Math.round((maxPuan / 4) * 100);
+
+        if (kazananHoca === 'adem') {
+            baslik.innerText = `🎉 %${yuzde} Sen ADEM HOCA'sın!`;
+            mesaj.innerHTML = "Fen Bilimlerinin efsanesi, gitarın ustası ve koyu Galatasaraylı Adem Hocamız! Şimdi sana özel 5 soruluk testine geçmeye hazırsın! 💛❤️";
+        } else if (kazananHoca === 'ingilizce') {
+            baslik.innerText = `🎉 %${yuzde} Sen İNGİLİZCE HOCAMIZSIN!`;
+            mesaj.innerHTML = "Fenerbahçe sevginiz, Adem Hoca ile efsane dostluğunuz ve 'Sana yüz veriyorum' şakalarınızla dersleriniz su gibi akıyor. Şimdi sana özel 5 soruluk testine geçmeye hazırsın! 💛💙";
+        } else if (kazananHoca === 'mehtap') {
+            baslik.innerText = `🎉 %${yuzde} Sen MEHTAP HOCA'sın!`;
+            mesaj.innerHTML = "Matematiği 10 saniyede çözen hızınız, o muazzam sakinliğiniz ve tatlı 'Ben bunu size anlattım' hatırlatmalarınızla bize sayıları sevdirdiniz. Şimdi sana özel 5 soruluk testine geçmeye hazırsın! 📐✨";
+        } else if (kazananHoca === 'nesibe') {
+            baslik.innerText = `🎉 %${yuzde} Sen NESİBE HOCA'sın!`;
+            mesaj.innerHTML = "TÜBİTAK başarılarınız, sakinliğiniz, Teknoloji Tasarım vizyonunuz ve Leonardo da Vinci'yi kıskandıran çizimlerinizle bize üretmeyi ve sanatı sevdirdiniz. Şimdi sana özel 5 soruluk testine geçmeye hazırsın! 💡🎨";
+        } else if (kazananHoca === 'celalettin') {
+            baslik.innerText = `🎉 %${yuzde} Sen CELALETTİN HOCA'sın!`;
+            mesaj.innerHTML = "O muazzam hikayelerin, sarsılmaz sabrın ve her konunun sonunda sorduğun 'Sence ne kadar doğru?' felsefenle baş tacısın! Şimdi sana özel 5 soruluk testine geçmeye hazırsın! 📖✨";
+        }
+    }
+
+
+    // --- 2. OYUN: HER HOCAYA ÖZEL 5'ER TANE TERS KÖŞE SORU SETİ ---
+    const hocaSorulariSeti = {
+        adem: [
+            {
+                tag: "Fen Bilimleri (Adem Hoca) (1 / 5)",
+                soru: "Maddenin hal değişiminde katıdan sıvıya geçiş (erime) sırasında dışarıdan ısı alması gerekir mi?",
+                secenekler: [
+                    { metin: "A) Evet, erime olayının gerçekleşmesi için maddenin ısı alması şarttır.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, maddeler üşüdüğü için hal değiştirir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Fen Bilimleri (Adem Hoca) (2 / 5)",
+                soru: "Saf maddelerin erime ve kaynama noktaları sabit midir?",
+                secenekler: [
+                    { metin: "A) Evet, basınç sabitken saf maddelerin hal değişim sıcaklıkları sabittir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, maddeler o günkü moda göre sıcaklık değiştirir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Fen Bilimleri (Adem Hoca) (3 / 5)",
+                soru: "Ses boşlukta yayılabilir mi?",
+                secenekler: [
+                    { metin: "A) Hayır, sesin yayılması için maddesel bir ortama ihtiyaç vardır.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Evet, uzaydaki boşlukta fısıldarsak herkes duyar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Fen Bilimleri (Adem Hoca) (4 / 5)",
+                soru: "Işığın yayılma hızı boşlukta en yüksek değerine mi ulaşır?",
+                secenekler: [
+                    { metin: "A) Evet, ışık boşluktaki hızıyla evrendeki en hızlı şeydir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, kaplumbağalar ışıktan daha hızlı koşar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Fen Bilimleri (Adem Hoca) (5 / 5)",
+                soru: "Kritik sıcaklık ve öz ısı maddeler için ayırt edici bir özellik midir?",
+                secenekler: [
+                    { metin: "A) Evet, öz ısı ve hal değişim sıcaklıkları maddeler için ayırt edicidir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, maddeler karpuz severse öz ısıları artar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            }
+        ],
+        ingilizce: [
+            {
+                tag: "İngilizce Hoca (1 / 5)",
+                soru: "İngilizce'de geçmiş zamanda (Past Tense) kurallı fiillerin sonuna hangi ek getirilir?",
+                secenekler: [
+                    { metin: "A) '-ed' takısı getirilerek cümle geçmiş zamana çevrilir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Kelimenin sonuna fenerbahçe marşı eklenir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "İngilizce Hoca (2 / 5)",
+                soru: "İngilizce alfabe kaç harften oluşur?",
+                secenekler: [
+                    { metin: "A) 26 harften oluşur.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) 105 bin harften oluşur ve hepsi 'A' harfidir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "İngilizce Hoca (3 / 5)",
+                soru: "'To be' fiilinin geçmiş zaman (Past) halleri nedir?",
+                secenekler: [
+                    { metin: "A) Tekillerde 'was', çoğullarda 'were' kullanılır.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Maymunlar bu fiili çekemez.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "İngilizce Hoca (4 / 5)",
+                soru: "Geniş zamanda (Simple Present Tense) üçüncü tekil şahıslarda fiile hangi ek gelir?",
+                secenekler: [
+                    { metin: "A) Fiilin sonuna '-s' veya '-es' takısı eklenir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Cümlenin ortasına araba kornası eklenir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "İngilizce Hoca (5 / 5)",
+                soru: "İngilizce'de soru cümlesi yaparken başa hangi yardımcı fiiller gelebilir?",
+                secenekler: [
+                    { metin: "A) 'Do' veya 'Does' yardımcı fiilleri başa getirilir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Boş bir bardak masaya konulur.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            }
+        ],
+        mehtap: [
+            {
+                tag: "Mehtap Hoca (Matematik) (1 / 5)",
+                soru: "Bir üçgenin iç açılarının ölçüleri toplamı kaç derecedir?",
+                secenekler: [
+                    { metin: "A) 180 derecedir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) 1077777 dir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Mehtap Hoca (Matematik) (2 / 5)",
+                soru: "Temel aritfekte 0 (sıfır) bir sayıya bölündüğünde sonuç ne olur?",
+                secenekler: [
+                    { metin: "A) Sıfırın haricindeki sayılarda sonuç sıfır olur, sayı 0'a bölünemez.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Sonuç mor renkli bir buluta dönüşür.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Mehtap Hoca (Matematik) (3 / 5)",
+                soru: "En küçük asal sayı kaçtır?",
+                secenekler: [
+                    { metin: "A) 2'dir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Domatestir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Mehtap Hoca (Matematik) (4 / 5)",
+                soru: "Karenin tüm iç açılarının toplamı kaç derecedir?",
+                secenekler: [
+                    { metin: "A) 360 derecedir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) 4 tane kedi resmidir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Mehtap Hoca (Matematik) (5 / 5)",
+                soru: "İki negatif sayının çarpımının işareti nedir?",
+                secenekler: [
+                    { metin: "A) Pozitiftir (+).", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Sonuç zıplayan bir kurbağadır.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            }
+        ],
+        nesibe: [
+            {
+                tag: "Nesibe Hoca (Teknoloji Tasarım & Resim) (1 / 5)",
+                soru: "Tasarım sürecinde ilk aşama olarak ihtiyaçların belirlenmesi ve problemin tanımlanması gerekir mi?",
+                secenekler: [
+                    { metin: "A) Evet, doğru bir tasarım için önce problem tespit edilmelidir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, doğrudan kağıt yeme yarışması yapılır.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Nesibe Hoca (Teknoloji Tasarım & Resim) (2 / 5)",
+                soru: "Ana renklerin (kırmızı, sarı, mavi) karışımıyla ara renkler elde edilir mi?",
+                secenekler: [
+                    { metin: "A) Evet, renk teorisine göre ana renkler ara renkleri oluşturur.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, renkler masadan aşağı atlar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Nesibe Hoca (Teknoloji Tasarım & Resim) (3 / 5)",
+                soru: "Teknoloji ve tasarım projelerinde beyin fırtınası yapmak fikir üretmeyi sağlar mı?",
+                secenekler: [
+                    { metin: "A) Evet, farklı fikirlerin ortaya çıkması için etkilidir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, pencereler açılıp dışarıya el sallanır.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Nesibe Hoca (Teknoloji Tasarım & Resim) (4 / 5)",
+                soru: "Üç boyutlu (3D) nesnelerin en, boy ve neyi bulunur?",
+                secenekler: [
+                    { metin: "A) Yüksekliği (derinliği) bulunur.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Uykusu bulunur.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Nesibe Hoca (Teknoloji Tasarım & Resim) (5 / 5)",
+                soru: "Perspektif çizimlerde uzaktaki nesneler nasıl görünür?",
+                secenekler: [
+                    { metin: "A) Daha küçük görünür.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Görünmezler çünkü gizliambaç oynamaktadırlar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            }
+        ],
+        celalettin: [
+            {
+                tag: "Celalettin Hoca (Hikaye & Hayat) (1 / 5)",
+                soru: "Güzel bir hikaye anlatırken dinleyicilerin dikkatini canlı tutmak için mimikler ve tonlama kullanılmalı mıdır?",
+                secenekler: [
+                    { metin: "A) Evet, ses tonu ve vurgular hikayenin etkisini artırır.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, hikaye anlatırken masaya patates püresi sürülür.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Celalettin Hoca (Hikaye & Hayat) (2 / 5)",
+                soru: "Eski zamanlarda yaşanan olaylar günümüz hayatına ışık tutabilir mi?",
+                    secenekler: [
+                    { metin: "A) Evet, tarih ve yaşanmışlıklar geleceğe rehberlik eder.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Sence ne kadar doğru?", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Celalettin Hoca (Hikaye & Hayat) (3 / 5)",
+                soru: "Sabırlı bir insan olmak zorluklarla başa çıkmayı kolaylaştırır mı?",
+                secenekler: [
+                    { metin: "A) Evet, sabır erdemdir ve sorunları çözer.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, sabır insanı yorar.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Celalettin Hoca (Hikaye & Hayat) (4 / 5)",
+                soru: "Bir anlatının akıcı olması için kelime dağarcığı geniş olmalı mıdır?",
+                secenekler: [
+                    { metin: "A) Evet, zengin bir kelime hazinesi anlatımı güçlendirir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Hayır, kelimeler yerine kuş sesleri taklit edilir.", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            },
+            {
+                tag: "Celalettin Hoca (Hikaye & Hayat) (5 / 5)",
+                soru: "Her hikayenin sonunda mutlaka çıkarılacak bir ders var mıdır?",
+                secenekler: [
+                    { metin: "A) Genellikle evet, hikayeler insanlara öğüt verir.", dogru: false, yorum: "❌ Nasıl yanlış yaptınız hocam?!" },
+                    { metin: "B) Sence ne kadar doğru?", dogru: true, yorum: "✅ DOĞRU! Tamamen saçma ama sistem bunu doğru kabul etti!" }
+                ]
+            }
+        ]
+    };
+
+    let g2Index = 0;
+    let aktifSorularDizisi = [];
+
+    function ikinciOyunaBasla() {
+        document.getElementById("result-box").style.display = "none";
+        document.getElementById("game2-box").style.display = "block";
+        
+        aktifSorularDizisi = hocaSorulariSeti[kazananHoca];
+        g2Index = 0;
+        g2SoruYukle();
+    }
+
+    function g2SoruYukle() {
+        if (g2Index >= aktifSorularDizisi.length) {
+            document.getElementById("game2-box").style.display = "none";
+            document.getElementById("itiraf-box").style.display = "block";
+            return;
+        }
+
+        const m = aktifSorularDizisi[g2Index];
+        document.getElementById("g2-teacher-tag").innerText = m.tag;
+        document.getElementById("g2-title").innerText = m.soru;
+        document.getElementById("g2-subtitle").innerText = "";
+        document.getElementById("g2-feedback").innerText = "";
+
+        const div = document.getElementById("g2-choices");
+        div.innerHTML = "";
+
+        m.secenekler.forEach(sec => {
+            const btn = document.createElement("button");
+            btn.innerText = sec.metin;
+            btn.onclick = function() {
+                const fb = document.getElementById("g2-feedback");
+                Array.from(div.children).forEach(b => b.disabled = true);
+
+                if (sec.dogru) {
+                    fb.style.color = "#1dd1a1";
+                    fb.innerText = sec.yorum;
+                } else {
+                    fb.style.color = "#ff6b6b";
+                    fb.innerText = sec.yorum;
+                }
+
+                setTimeout(() => {
+                    g2Index++;
+                    g2SoruYukle();
+                }, 2500);
+            };
+            div.appendChild(btn);
+        });
+    }
+
+    // İlk açılış
+    oyunuSifirla();
+</script>
+
+</body>
+</html>
